@@ -30,7 +30,7 @@ function checkEnvVariables(...args: string[]) {
 }
 
 // check if the environment variables are set
-checkEnvVariables('ECR_REPOSITORY_NAME', 'APP_NAME', 'IMAGE_VERSION');
+checkEnvVariables('ECR_REPOSITORY_NAME', 'APP_NAME');
 
 for (const cdkRegion of cdkRegions) {
     for (const environment of environments) {
@@ -42,8 +42,8 @@ for (const cdkRegion of cdkRegions) {
             tags: {
                 environment,
             },
-            repositoryName: `${process.env.ECR_REPOSITORY_NAME}-${environment}` ?? 'chromadb-docker-image-ecr-deployment-cdk',
-            appName: process.env.APP_NAME ?? 'chroma-vectordatabase',
+            repositoryName: `${process.env.ECR_REPOSITORY_NAME}-${environment}`,
+            appName: process.env.APP_NAME,
             imageVersion: process.env.IMAGE_VERSION ?? DEFAULT_IMAGE_VERSION,
             environment: environment
         });

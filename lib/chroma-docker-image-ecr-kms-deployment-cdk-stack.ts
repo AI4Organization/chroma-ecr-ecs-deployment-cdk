@@ -21,6 +21,7 @@ export class ChromaDockerImageEcrDeploymentCdkStack extends cdk.Stack {
             autoDeleteImages: true,
             encryption: ecr.RepositoryEncryption.KMS,
             encryptionKey: kmsKey,
+            imageScanOnPush: true,
         });
 
         ecrRepository.addLifecycleRule({ maxImageAge: cdk.Duration.days(7), rulePriority: 1, tagStatus: ecr.TagStatus.UNTAGGED }); // delete images older than 7 days

@@ -4,6 +4,7 @@ import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import * as dotenv from 'dotenv';
 import { ChromaDockerImageEcrDeploymentCdkStack } from '../lib/chroma-docker-image-ecr-deployment-cdk-stack';
+import { IEnvTypes } from '../process-env-typed';
 
 dotenv.config(); // Load environment variables from .env file
 const app = new cdk.App();
@@ -32,6 +33,12 @@ function checkEnvVariables(...args: string[]) {
 // check if the environment variables are set
 checkEnvVariables('ECR_REPOSITORY_NAME', 'APP_NAME');
 
+const envTypes: IEnvTypes = {
+    ECR_REPOSITORY_NAME: process.env.ECR_REPOSITORY_NAME ?? `chromadb-docker-image-erc-repository`,
+    APP_NAME: process.env.APP_NAME ?? `chroma-vectordatabase`,
+    IMAGE_VERSION: process.env.IMAGE_VERSION ?? DEFAULT_IMAGE_VERSION,
+};
+
 for (const cdkRegion of cdkRegions) {
     for (const environment of environments) {
         new ChromaDockerImageEcrDeploymentCdkStack(app, `ChromaDockerImageEcrDeploymentCdkStack-${cdkRegion}-${environment}`, {
@@ -42,9 +49,9 @@ for (const cdkRegion of cdkRegions) {
             tags: {
                 environment,
             },
-            repositoryName: `${process.env.ECR_REPOSITORY_NAME}-${environment}`,
-            appName: process.env.APP_NAME,
-            imageVersion: process.env.IMAGE_VERSION ?? DEFAULT_IMAGE_VERSION,
+            repositoryName: `${envTypes.ECR_REPOSITORY_NAME}-${environment}`,
+            appName: envTypes.APP_NAME,
+            imageVersion: envTypes.IMAGE_VERSION ?? DEFAULT_IMAGE_VERSION,
             environment: environment
         });
     }

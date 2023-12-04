@@ -73,10 +73,21 @@ jobs:
         run: npm ci
         continue-on-error: false
 
+      - name: Set ENVIRONMENTS variable
+        id: env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+            echo "::set-output name=ENVIRONMENTS::${{ secrets.ENVIRONMENTS_DEV }}"
+          elif [[ "${{ github.ref }}" == "refs/heads/stg" ]]; then
+            echo "::set-output name=ENVIRONMENTS::${{ secrets.ENVIRONMENTS_STG }}"
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "::set-output name=ENVIRONMENTS::${{ secrets.ENVIRONMENTS_MAIN }}"
+          fi
+
       - name: Run CDK synth
         env:
           CDK_DEPLOY_REGIONS: ${{ secrets.CDK_DEPLOY_REGIONS }}
-          ENVIRONMENTS: ${{ secrets.ENVIRONMENTS }}
+          ENVIRONMENTS: ${{ steps.env.outputs.ENVIRONMENTS }}
           ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
           APP_NAME: ${{ secrets.APP_NAME }}
           IMAGE_VERSION: ${{ secrets.IMAGE_VERSION }}

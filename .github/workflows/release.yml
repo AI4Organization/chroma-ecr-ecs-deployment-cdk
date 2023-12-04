@@ -90,7 +90,7 @@ jobs:
           ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
           APP_NAME: ${{ secrets.APP_NAME }}
           IMAGE_VERSION: ${{ secrets.IMAGE_VERSION }}
-        run: npx cdk bootstrap
+        run: npx cdk bootstrap --context environment=${{ env.ENVIRONMENTS }}
         continue-on-error: false
 
       - name: Deploy to AWS using CDK

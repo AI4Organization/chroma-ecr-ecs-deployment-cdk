@@ -74,7 +74,7 @@ jobs:
           ECR_REPOSITORY_NAME: ${{ env.ECR_REPOSITORY_NAME }}
           APP_NAME: ${{ env.APP_NAME }}
           IMAGE_VERSION: ${{ env.IMAGE_VERSION }}
-        run: npx cdk synth --context region=$CDK_DEPLOY_REGIONS --context environment=$ENVIRONMENTS --context ecrRepoName=$ECR_REPOSITORY_NAME --context appName=$APP_NAME --context imageVersion=$IMAGE_VERSION
+        run: npx cdk synth
         continue-on-error: false
 
       - name: Run CDK Bootstrap
@@ -84,7 +84,7 @@ jobs:
           ECR_REPOSITORY_NAME: ${{ env.ECR_REPOSITORY_NAME }}
           APP_NAME: ${{ env.APP_NAME }}
           IMAGE_VERSION: ${{ env.IMAGE_VERSION }}
-        run: npx cdk bootstrap --context region=$CDK_DEPLOY_REGIONS --context environment=$ENVIRONMENTS --context ecrRepoName=$ECR_REPOSITORY_NAME --context appName=$APP_NAME --context imageVersion=$IMAGE_VERSION
+        run: npx cdk bootstrap
         continue-on-error: false
 
       - name: Deploy to AWS using CDK

@@ -111,7 +111,7 @@ jobs:
         run: npx cdk deploy --require-approval never --all
         env:
           CDK_DEPLOY_REGIONS: ${{ secrets.CDK_DEPLOY_REGIONS }}
-          ENVIRONMENTS: ${{ steps.env.outputs.ENVIRONMENTS }}
+          ENVIRONMENTS: ${{ env.ENVIRONMENTS }}
           ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
           APP_NAME: ${{ secrets.APP_NAME }}
           IMAGE_VERSION: ${{ secrets.IMAGE_VERSION }}

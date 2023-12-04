@@ -80,22 +80,16 @@ jobs:
           ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
           APP_NAME: ${{ secrets.APP_NAME }}
           IMAGE_VERSION: ${{ secrets.IMAGE_VERSION }}
-        run: |
-          echo "CDK_DEPLOY_REGIONS: $CDK_DEPLOY_REGIONS"
-          echo "ENVIRONMENTS: $ENVIRONMENTS"
-          echo "ECR_REPOSITORY_NAME: $ECR_REPOSITORY_NAME"
-          echo "APP_NAME: $APP_NAME"
-          echo "IMAGE_VERSION: $IMAGE_VERSION"
-          npx cdk synth
+        run: npx cdk synth
         continue-on-error: false
 
       - name: Run CDK Bootstrap
         env:
-          CDK_DEPLOY_REGIONS: ${{ env.CDK_DEPLOY_REGIONS }}
-          ENVIRONMENTS: ${{ env.ENVIRONMENTS }}
-          ECR_REPOSITORY_NAME: ${{ env.ECR_REPOSITORY_NAME }}
-          APP_NAME: ${{ env.APP_NAME }}
-          IMAGE_VERSION: ${{ env.IMAGE_VERSION }}
+          CDK_DEPLOY_REGIONS: ${{ secrets.CDK_DEPLOY_REGIONS }}
+          ENVIRONMENTS: ${{ secrets.ENVIRONMENTS }}
+          ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
+          APP_NAME: ${{ secrets.APP_NAME }}
+          IMAGE_VERSION: ${{ secrets.IMAGE_VERSION }}
         run: npx cdk bootstrap
         continue-on-error: false
 

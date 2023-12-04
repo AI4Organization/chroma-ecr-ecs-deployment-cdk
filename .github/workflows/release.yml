@@ -42,17 +42,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-cdk-
 
-      - name: Set up Node.js 20.x
+      - name: Set up Node.js 16.x
         uses: actions/setup-node@v3
         with:
           node-version: '20.x'
         continue-on-error: false
 
-      - name: Install AWS CLI
+      - name: Check AWS CLI
         run: |
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
+          if ! command -v aws &> /dev/null
+          then
+            echo "AWS CLI could not be found, installing..."
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+          else
+            echo "AWS CLI is installed"
+          fi
         continue-on-error: false
 
       - name: Configure AWS credentials
@@ -77,15 +83,6 @@ jobs:
         run: npx cdk synth
         continue-on-error: false
 
-      - name: Run CDK Bootstrap
-        env:
-          CDK_DEPLOY_REGIONS: ${{ env.CDK_DEPLOY_REGIONS }}
-          ENVIRONMENTS: ${{ env.ENVIRONMENTS }}
-          ECR_REPOSITORY_NAME: ${{ env.ECR_REPOSITORY_NAME }}
-          APP_NAME: ${{ env.APP_NAME }}
-          IMAGE_VERSION: ${{ env.IMAGE_VERSION }}
-        run: npx cdk bootstrap
-        continue-on-error: false
 
       - name: Deploy to AWS using CDK
         run: npx cdk deploy --require-approval never

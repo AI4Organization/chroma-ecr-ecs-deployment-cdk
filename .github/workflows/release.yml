@@ -76,22 +76,21 @@ jobs:
         continue-on-error: false
 
       - name: Set ENVIRONMENTS variable
-        id: env
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
-            echo "::set-output name=ENVIRONMENTS::${{ secrets.ENVIRONMENTS_DEV }}"
+            echo "ENVIRONMENTS=${{ secrets.ENVIRONMENTS_DEV }}" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/stg" ]]; then
-            echo "::set-output name=ENVIRONMENTS::${{ secrets.ENVIRONMENTS_STG }}"
+            echo "ENVIRONMENTS=${{ secrets.ENVIRONMENTS_STG }}" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "::set-output name=ENVIRONMENTS::${{ secrets.ENVIRONMENTS_MAIN }}"
+            echo "ENVIRONMENTS=${{ secrets.ENVIRONMENTS_MAIN }}" >> $GITHUB_ENV
           else
-            echo "::set-output name=ENVIRONMENTS::${{ github.ref }}"
+            echo "ENVIRONMENTS=${{ github.ref }}" >> $GITHUB_ENV
           fi
 
       - name: Run CDK synth
         env:
           CDK_DEPLOY_REGIONS: ${{ secrets.CDK_DEPLOY_REGIONS }}
-          ENVIRONMENTS: ${{ steps.env.outputs.ENVIRONMENTS }}
+          ENVIRONMENTS: ${{ env.ENVIRONMENTS }}
           ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
           APP_NAME: ${{ secrets.APP_NAME }}
           IMAGE_VERSION: ${{ secrets.IMAGE_VERSION }}

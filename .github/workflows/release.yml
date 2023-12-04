@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - stg
+      - dev
   pull_request:
     branches:
       - dev
@@ -73,10 +75,22 @@ jobs:
         run: npm ci
         continue-on-error: false
 
+      - name: Set ENVIRONMENTS variable
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+            echo "ENVIRONMENTS=${{ secrets.ENVIRONMENTS_DEV }}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/stg" ]]; then
+            echo "ENVIRONMENTS=${{ secrets.ENVIRONMENTS_STG }}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "ENVIRONMENTS=${{ secrets.ENVIRONMENTS_MAIN }}" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENTS=${{ github.ref }}" >> $GITHUB_ENV
+          fi
+
       - name: Run CDK synth
         env:
           CDK_DEPLOY_REGIONS: ${{ secrets.CDK_DEPLOY_REGIONS }}
-          ENVIRONMENTS: ${{ secrets.ENVIRONMENTS }}
+          ENVIRONMENTS: ${{ env.ENVIRONMENTS }}
           ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
           APP_NAME: ${{ secrets.APP_NAME }}
           IMAGE_VERSION: ${{ secrets.IMAGE_VERSION }}
@@ -86,7 +100,7 @@ jobs:
       - name: Run CDK Bootstrap
         env:
           CDK_DEPLOY_REGIONS: ${{ secrets.CDK_DEPLOY_REGIONS }}
-          ENVIRONMENTS: ${{ secrets.ENVIRONMENTS }}
+          ENVIRONMENTS: ${{ env.ENVIRONMENTS }}
           ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
           APP_NAME: ${{ secrets.APP_NAME }}
           IMAGE_VERSION: ${{ secrets.IMAGE_VERSION }}
@@ -97,7 +111,7 @@ jobs:
         run: npx cdk deploy --require-approval never --all
         env:
           CDK_DEPLOY_REGIONS: ${{ secrets.CDK_DEPLOY_REGIONS }}
-          ENVIRONMENTS: ${{ secrets.ENVIRONMENTS }}
+          ENVIRONMENTS: ${{ env.ENVIRONMENTS }}
           ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
           APP_NAME: ${{ secrets.APP_NAME }}
           IMAGE_VERSION: ${{ secrets.IMAGE_VERSION }}

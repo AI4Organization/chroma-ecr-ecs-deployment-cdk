@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - stg
+      - dev
   pull_request:
     branches:
       - dev
@@ -82,6 +84,8 @@ jobs:
             echo "::set-output name=ENVIRONMENTS::${{ secrets.ENVIRONMENTS_STG }}"
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "::set-output name=ENVIRONMENTS::${{ secrets.ENVIRONMENTS_MAIN }}"
+          else
+            echo "::set-output name=ENVIRONMENTS::${{ github.ref }}"
           fi
 
       - name: Run CDK synth

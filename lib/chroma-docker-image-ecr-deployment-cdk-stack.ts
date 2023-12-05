@@ -21,7 +21,7 @@ export class ChromaDockerImageEcrDeploymentCdkStack extends cdk.Stack {
 
     // Copy from docker registry to ECR.
     new ecrDeploy.ECRDeployment(this, `${props.appName}-${props.environment}-DockerImageEcrDeployment`, {
-      src: new ecrDeploy.DockerImageName('qdrant/qdrant:latest'),
+      src: new ecrDeploy.DockerImageName('chromadb/chroma:latest'),
       dest: new ecrDeploy.DockerImageName(`${ecrRepository.repositoryUri}:${props.imageVersion}`),
     });
   }

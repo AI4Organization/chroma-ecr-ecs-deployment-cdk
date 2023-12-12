@@ -5,24 +5,30 @@ import * as ecr from 'aws-cdk-lib/aws-ecr';
 import { ChromaDockerImageEcrDeploymentCdkStackProps } from './ChromaDockerImageEcrDeploymentCdkStackProps';
 
 export class ChromaDockerImageEcrDeploymentCdkStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: ChromaDockerImageEcrDeploymentCdkStackProps) {
-    super(scope, id, props);
+    constructor(scope: Construct, id: string, props: ChromaDockerImageEcrDeploymentCdkStackProps) {
+        super(scope, id, props);
 
-    const ecrRepository = new ecr.Repository(this, `${props.appName}-${props.environment}-DockerImageEcrRepository`, {
-      repositoryName: props.repositoryName,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteImages: true,
-      imageScanOnPush: true,
-      encryption: ecr.RepositoryEncryption.AES_256
-    });
+        const ecrRepository = new ecr.Repository(this, `${props.appName}-${props.environment}-DockerImageEcrRepository`, {
+            repositoryName: props.repositoryName,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            autoDeleteImages: true,
+            imageScanOnPush: true,
+            encryption: ecr.RepositoryEncryption.AES_256
+        });
 
-    ecrRepository.addLifecycleRule({ maxImageAge: cdk.Duration.days(7), rulePriority: 1, tagStatus: ecr.TagStatus.UNTAGGED }); // delete images older than 7 days
-    ecrRepository.addLifecycleRule({ maxImageCount: 4, rulePriority: 2, tagStatus: ecr.TagStatus.ANY }); // keep last 4 images
+        ecrRepository.addLifecycleRule({ maxImageAge: cdk.Duration.days(7), rulePriority: 1, tagStatus: ecr.TagStatus.UNTAGGED }); // delete images older than 7 days
+        ecrRepository.addLifecycleRule({ maxImageCount: 4, rulePriority: 2, tagStatus: ecr.TagStatus.ANY }); // keep last 4 images
 
-    // Copy from docker registry to ECR.
-    new ecrDeploy.ECRDeployment(this, `${props.appName}-${props.environment}-DockerImageEcrDeployment`, {
-      src: new ecrDeploy.DockerImageName('chromadb/chroma:latest'),
-      dest: new ecrDeploy.DockerImageName(`${ecrRepository.repositoryUri}:${props.imageVersion}`),
-    });
-  }
+        // Copy from docker registry to ECR.
+        new ecrDeploy.ECRDeployment(this, `${props.appName}-${props.environment}-DockerImageEcrDeployment`, {
+            src: new ecrDeploy.DockerImageName('chromadb/chroma:latest'),
+            dest: new ecrDeploy.DockerImageName(`${ecrRepository.repositoryUri}:${props.imageVersion}`),
+        });
+
+        // print out ecrRepository arn
+        new cdk.CfnOutput(this, `${props.appName}-${props.environment}-ECRRepositoryArn`, {
+            value: ecrRepository.repositoryArn,
+            exportName: `${props.appName}-${props.environment}-ECRRepositoryArn`,
+        });
+    }
 }

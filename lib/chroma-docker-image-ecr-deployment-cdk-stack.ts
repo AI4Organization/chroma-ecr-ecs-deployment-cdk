@@ -23,7 +23,7 @@ export class ChromaDockerImageEcrDeploymentCdkStack extends cdk.Stack {
         const deployImageVersions = [props.imageVersion, LATEST_IMAGE_VERSION];
         for (const deployImageVersion of deployImageVersions) {
             // Copy from docker registry to ECR.
-            new ecrDeploy.ECRDeployment(this, `${props.appName}-${props.environment}-ECRDeployment`, {
+            new ecrDeploy.ECRDeployment(this, `${props.appName}-${props.environment}-${deployImageVersion}-ECRDeployment`, {
                 src: new ecrDeploy.DockerImageName('chromadb/chroma:latest'),
                 dest: new ecrDeploy.DockerImageName(`${ecrRepository.repositoryUri}:${deployImageVersion}`),
             });

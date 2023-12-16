@@ -20,14 +20,12 @@ export class ChromaDockerImageEcrDeploymentCdkStack extends cdk.Stack {
         ecrRepository.addLifecycleRule({ maxImageAge: cdk.Duration.days(7), rulePriority: 1, tagStatus: ecr.TagStatus.UNTAGGED }); // delete images older than 7 days
         ecrRepository.addLifecycleRule({ maxImageCount: 4, rulePriority: 2, tagStatus: ecr.TagStatus.ANY }); // keep last 4 images
 
-        const deployImageVersions = [props.imageVersion, LATEST_IMAGE_VERSION];
-        for (const deployImageVersion of deployImageVersions) {
-            // Copy from docker registry to ECR.
-            new ecrDeploy.ECRDeployment(this, `${props.appName}-${props.environment}-${deployImageVersion}-ECRDeployment`, {
-                src: new ecrDeploy.DockerImageName('chromadb/chroma:latest'),
-                dest: new ecrDeploy.DockerImageName(`${ecrRepository.repositoryUri}:${deployImageVersion}`),
-            });
-        }
+        const deployImageVersion = props.imageVersion;
+        // Copy from docker registry to ECR.
+        new ecrDeploy.ECRDeployment(this, `${props.appName}-${props.environment}-${deployImageVersion}-ECRDeployment`, {
+            src: new ecrDeploy.DockerImageName('chromadb/chroma:latest'),
+            dest: new ecrDeploy.DockerImageName(`${ecrRepository.repositoryUri}:${deployImageVersion}`),
+        });
 
         // print out ecrRepository arn
         new cdk.CfnOutput(this, `${props.appName}-${props.environment}-ECRRepositoryArn`, {

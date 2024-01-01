@@ -6,6 +6,13 @@ import * as ecr from 'aws-cdk-lib/aws-ecr';
 import { ChromaDockerImageEcrDeploymentCdkStackProps } from './ChromaDockerImageEcrDeploymentCdkStackProps';
 import { LATEST_IMAGE_VERSION } from '../bin/chroma-docker-image-ecr-deployment-cdk';
 
+/**
+ * This stack is responsible for deploying a Docker image to an Amazon ECR repository.
+ * It creates the ECR repository if it does not exist, sets up lifecycle rules for image retention,
+ * and handles the deployment of specified image versions from an external Docker registry to ECR.
+ *
+ * @property {ChromaDockerImageEcrDeploymentCdkStackProps} props - The properties for the stack including the ECR repository name, application name, image version, and deployment environment.
+ */
 export class ChromaDockerImageEcrDeploymentCdkStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: ChromaDockerImageEcrDeploymentCdkStackProps) {
         super(scope, id, props);
@@ -19,7 +26,7 @@ export class ChromaDockerImageEcrDeploymentCdkStack extends cdk.Stack {
         const ecrRepository = new ecr.Repository(this, `${props.appName}-${props.environment}-ECRRepository`, {
             repositoryName: props.repositoryName,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
-            autoDeleteImages: true,
+            emptyOnDelete: true,
             encryption: ecr.RepositoryEncryption.KMS,
             encryptionKey: kmsKey,
             imageScanOnPush: true,

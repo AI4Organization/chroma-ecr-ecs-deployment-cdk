@@ -9,6 +9,13 @@ import { ApplicationLoadBalancedCodeDeployedFargateService } from '@cdklabs/cdk-
 import { ChromaDockerImageEcsDeploymentCdkStackProps } from './ChromaDockerImageEcsDeploymentCdkStackProps';
 import { createVPC } from './chroma-vpc-deployment';
 
+/**
+ * This stack deploys a Docker image from Amazon ECR to Amazon ECS using AWS Fargate.
+ * It sets up a VPC, EFS, and security groups, and defines an ECS cluster with a Fargate service.
+ * The service is load balanced using an Application Load Balancer and includes auto-scaling configuration.
+ *
+ * @property {ChromaDockerImageEcsDeploymentCdkStackProps} props - The properties for the stack including ECR repository details, ECS configuration, and network settings.
+ */
 export class ChromaEcrImageEcsDeploymentCdkStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: ChromaDockerImageEcsDeploymentCdkStackProps) {
         super(scope, id, props);

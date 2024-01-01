@@ -20,7 +20,7 @@ export class ChromaEcrImageEcsDeploymentCdkStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: ChromaDockerImageEcsDeploymentCdkStackProps) {
         super(scope, id, props);
 
-        const qdrantVpc = createVPC(this, props);
+        const chromaVpc = createVPC(this, props);
 
         const ecrRepositoryName = props.repositoryName;
         console.log(`ecrRepositoryName: ${ecrRepositoryName}`);
@@ -34,28 +34,28 @@ export class ChromaEcrImageEcsDeploymentCdkStack extends cdk.Stack {
         // define a cluster with spot instances, linux type
         const ecsCluster = new ecs.Cluster(this, `${props.environment}-${props.platformString}-${props.deployRegion}-Cluster`, {
             clusterName: `${props.environment}-${props.platformString}-${props.deployRegion}-Cluster`,
-            vpc: qdrantVpc,
+            vpc: chromaVpc,
             containerInsights: true,
         });
 
         // define a security group for EFS
-        const qdrantEfsSG = new ec2.SecurityGroup(this, `${props.environment}-${props.platformString}-${props.deployRegion}-qdrantEfsSG`, {
-            securityGroupName: `${props.environment}-${props.platformString}-${props.deployRegion}-qdrantEfsSG`,
-            vpc: qdrantVpc,
+        const chromaEfsSG = new ec2.SecurityGroup(this, `${props.environment}-${props.platformString}-${props.deployRegion}-chromaEfsSG`, {
+            securityGroupName: `${props.environment}-${props.platformString}-${props.deployRegion}-chromaEfsSG`,
+            vpc: chromaVpc,
             allowAllOutbound: true,
             allowAllIpv6Outbound: true,
         });
 
-        qdrantEfsSG.addIngressRule(
-            // ec2.Peer.ipv4(qdrantVpc.vpcCidrBlock)
-            qdrantEfsSG,
+        chromaEfsSG.addIngressRule(
+            // ec2.Peer.ipv4(chromaVpc.vpcCidrBlock)
+            chromaEfsSG,
             ec2.Port.tcp(2049),
             'Allow NFS traffic from the ECS tasks.'
         );
 
-        const qdrantDbSG = new ec2.SecurityGroup(this, `${props.environment}-${props.platformString}-${props.deployRegion}-qdrantDbSG`, {
-            securityGroupName: `${props.environment}-${props.platformString}-${props.deployRegion}-qdrantDbSG`,
-            vpc: qdrantVpc,
+        const chromaDbSG = new ec2.SecurityGroup(this, `${props.environment}-${props.platformString}-${props.deployRegion}-chromaDbSG`, {
+            securityGroupName: `${props.environment}-${props.platformString}-${props.deployRegion}-chromaDbSG`,
+            vpc: chromaVpc,
             allowAllOutbound: true,
             allowAllIpv6Outbound: true,
         });
@@ -63,19 +63,19 @@ export class ChromaEcrImageEcsDeploymentCdkStack extends cdk.Stack {
         const vectorDatabasePort = props.vectorDatabasePort;
         console.log(`vectorDatabasePort: ${vectorDatabasePort}`);
 
-        qdrantDbSG.addIngressRule(
-            // ec2.Peer.ipv4(qdrantVpc.vpcCidrBlock),
-            qdrantEfsSG,
+        chromaDbSG.addIngressRule(
+            // ec2.Peer.ipv4(chromaVpc.vpcCidrBlock),
+            chromaEfsSG,
             ec2.Port.tcp(vectorDatabasePort),
-            'Allow Qdrant traffic from the VPC.'
+            'Allow Chroma traffic from the VPC.'
         );
 
         // create an EFS File System
-        const efsFileSystem = new efs.FileSystem(this, `${props.environment}-${props.platformString}-${props.deployRegion}-QdrantServiceEfsFileSystem`, {
-            fileSystemName: `${props.environment}-${props.platformString}-${props.deployRegion}-QdrantServiceEfsFileSystem`,
-            vpc: qdrantVpc,
+        const efsFileSystem = new efs.FileSystem(this, `${props.environment}-${props.platformString}-${props.deployRegion}-ChromaServiceEfsFileSystem`, {
+            fileSystemName: `${props.environment}-${props.platformString}-${props.deployRegion}-ChromaServiceEfsFileSystem`,
+            vpc: chromaVpc,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
-            securityGroup: qdrantEfsSG, // Ensure this security group allows NFS traffic from the ECS tasks
+            securityGroup: chromaEfsSG, // Ensure this security group allows NFS traffic from the ECS tasks
             encrypted: true, // Enable encryption at rest
             performanceMode: efs.PerformanceMode.MAX_IO, // For AI application, HCP application, Analytics application, and media processing workflows
             allowAnonymousAccess: false, // Disable anonymous access
@@ -159,14 +159,14 @@ export class ChromaEcrImageEcsDeploymentCdkStack extends cdk.Stack {
         });
 
         // define a container with the image
-        const qdrantContainer = fargateTaskDefinition.addContainer(`${props.environment}-${props.platformString}-${props.deployRegion}-QdrantContainer`, {
+        const chromaContainer = fargateTaskDefinition.addContainer(`${props.environment}-${props.platformString}-${props.deployRegion}-ChromaContainer`, {
             image: ecsContainerImage,
-            logging: ecs.LogDrivers.awsLogs({ streamPrefix: `${props.environment}-${props.platformString}-${props.deployRegion}-QdrantService` }),
-            containerName: `${props.environment}-${props.platformString}-${props.deployRegion}-QdrantContainer`,
+            logging: ecs.LogDrivers.awsLogs({ streamPrefix: `${props.environment}-${props.platformString}-${props.deployRegion}-ChromaService` }),
+            containerName: `${props.environment}-${props.platformString}-${props.deployRegion}-ChromaContainer`,
         });
 
         // add port mapping
-        qdrantContainer.addPortMappings({
+        chromaContainer.addPortMappings({
             containerPort: vectorDatabasePort, // The port on the container to which the listener forwards traffic
             protocol: ecs.Protocol.TCP
         });
@@ -182,7 +182,7 @@ export class ChromaEcrImageEcsDeploymentCdkStack extends cdk.Stack {
         });
 
         // mount EFS to the container
-        qdrantContainer.addMountPoints({
+        chromaContainer.addMountPoints({
             sourceVolume: efsVolumeName, // The name of the volume to mount. Must be a volume name referenced in the name parameter of task definition volume.
             containerPath: `/${efsVolumeName}`, // The path on the container to mount the host volume at.
             readOnly: false, // Allow the container to write to the EFS volume.
@@ -194,7 +194,7 @@ export class ChromaEcrImageEcsDeploymentCdkStack extends cdk.Stack {
             desiredCount: 1,
             publicLoadBalancer: true,
             platformVersion: ecs.FargatePlatformVersion.VERSION1_4,
-            securityGroups: [qdrantEfsSG, qdrantDbSG], // might be needed to define port for qdrant vector sg
+            securityGroups: [chromaEfsSG, chromaDbSG], // might be needed to define port for Chroma vector sg
             listenerPort: 80, // The port on which the listener listens for incoming traffic
         });
 
